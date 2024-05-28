@@ -51,8 +51,7 @@ const Main = () => {
     } else if (location) {
         long = location.coords.longitude;
         lat = location.coords.latitude;
-        coords = `${lat},${long}`
-        
+        coords = `${lat},${long}`    
     }
 
     if (loading == true) {
@@ -90,7 +89,6 @@ const Main = () => {
                     <Text>{data.wind_kph} km/h</Text>
                     <Text>{data.precip_mm} mm</Text>
                     <Text>{data.humidity}%</Text>
-                    <Text>{coords}</Text>
                 </View>
             </View>
         )
