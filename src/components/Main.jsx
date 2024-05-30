@@ -20,6 +20,8 @@ const Main = () => {
     const [condition, setCond] = useState('')
     const [icondition, setICond] = useState(null)
 
+    const [forecast, setForecast] = useState(null)
+
     useEffect(()=>{
         (async () => {
       
@@ -31,15 +33,42 @@ const Main = () => {
       
             let location = await Location.getCurrentPositionAsync({});
             setLocation(location);
-            await fetch(`http://api.weatherapi.com/v1${parameters.current}key=${parameters.key}&q=${location.coords.latitude},${location.coords.longitude}&aqi=no`)
+            if (parameters.city == '') {
+                await fetch(`http://api.weatherapi.com/v1${parameters.current}key=${parameters.key}&q=${location.coords.latitude},${location.coords.longitude}&aqi=no`)
                     .then((res)=> res.json())
                     .then((data) => {
                         setLoc(data.location)
                         setData(data.current)
-                        setLoading(false)
                         setICond(data.current.condition.icon)
                         setCond(data.current.condition.text)
+                        setLoading(false)
                     })
+                console.log(parameters.actDate)
+                console.log(parameters.pastDate)
+                await fetch(`http://127.0.0.1:8000/get/weather/${location.coords.latitude},${location.coords.longitude}/${parameters.pastDate}/${parameters.actDate}`)
+                    .then((res)=> res.json())
+                    .then((data) => {
+                        setForecast(data.prediction)
+                    })
+            } else{
+                await fetch(`http://api.weatherapi.com/v1${parameters.current}key=${parameters.key}&q=${parameters.city}&aqi=no`)
+                        .then((res)=> res.json())
+                        .then((data) => {
+                            setLoc(data.location)
+                            setData(data.current)
+                            setLoading(false)
+                            setICond(data.current.condition.icon)
+                            setCond(data.current.condition.text)
+                        })
+                console.log(parameters.actDate)
+                console.log(parameters.pastDate)
+                await fetch(`http://127.0.0.1:8000/get/weather/${parameters.city}/${parameters.pastDate}/${parameters.actDate}`)
+                    .then((res)=> res.json())
+                    .then((data) => {
+                        setForecast(data.prediction)
+                    })
+                }
+
           })();
     }, [])
 
@@ -85,10 +114,25 @@ const Main = () => {
                         <Text>{data.feelslike_f}°F</Text>
                     </View>
                     <Text>{local.name}, {local.region}, {local.country}</Text>
-                    <Text>{local.localtime}</Text>        
+                    <Text>{local.localtime}</Text>
+                    <Text style={styles.text_tertiary}>Wind speed</Text>        
                     <Text>{data.wind_kph} km/h</Text>
+                    <Text style={styles.text_tertiary}>Precipitation amount</Text>
                     <Text>{data.precip_mm} mm</Text>
+                    <Text style={styles.text_tertiary}>Humidity</Text>
                     <Text>{data.humidity}%</Text>
+                    {
+                        forecast ? 
+                        (
+                            <View style={styles.subcontainer}>
+                                <Text style={styles.text_secondary}>Expected temperature</Text>
+                                <Text style={styles.text_secondary}>{forecast.predicted_avgtemp_c.toFixed(2)}°C</Text>
+                            </View> 
+                        ):
+                        (
+                            <></>
+                        )
+                    }
                 </View>
             </View>
         )
@@ -105,9 +149,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#ffffff70',
         padding: 35,
         width: '90%',
-        height: '90%',
+        height: '95%',
         borderRadius: 15,
-        gap: 5
+        gap: 5,
     },
     father: {
         display: 'flex',
@@ -138,6 +182,17 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         fontSize: 15
     },
+    text_tertiary: {
+        fontFamily: 'Poppins-Bold',
+        fontWeight: '600',
+        fontSize: 13
+    },
+    subcontainer: {
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center'
+    }
 })
 
 export default Main
